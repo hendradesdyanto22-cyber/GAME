@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catch the Answer - IPAS Ekosistem Kelas V</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#18324b;background:linear-gradient(135deg,#d8f8dc,#b5e7ff 55%,#fef3c7);min-height:100vh}
+header{padding:14px 18px;text-align:center;background:linear-gradient(90deg,#18875d,#36b88b);color:white;box-shadow:0 4px 14px #0002}
+header h1{margin:4px;font-size:clamp(22px,4vw,36px);text-shadow:2px 3px #12664c}header p{margin:5px}
+.panel{max-width:1100px;margin:16px auto;padding:12px;background:#ffffffd9;border:2px solid #fff;border-radius:20px;box-shadow:0 8px 20px #22553322}
+#topbar{display:flex;gap:12px;flex-wrap:wrap;justify-content:space-around;font-weight:bold;color:#14532d;padding:8px}
+#question{font-size:clamp(17px,3vw,24px);text-align:center;font-weight:bold;padding:16px;color:#174d36;min-height:78px}
+#arena{position:relative;height:min(58vh,500px);min-height:360px;overflow:hidden;border-radius:18px;border:3px solid #70c28e;background:linear-gradient(#a7e9ff 0%,#d6f6ff 55%,#80d46c 56%,#46ad55 100%);box-shadow:inset 0 0 40px #fff7}
+#arena:before{content:"☁️          ☁️                   ☁️";position:absolute;top:12px;width:100%;text-align:center;font-size:30px;opacity:.65;pointer-events:none}
+#objects{position:absolute;inset:0}
+.fruit{position:absolute;top:-80px;transform:translateX(-50%);padding:10px 12px;min-width:90px;max-width:150px;text-align:center;border-radius:22px;background:linear-gradient(145deg,#fff,#e6f7d9);border:3px solid #fff;box-shadow:0 8px 12px #174d3633;font-size:clamp(15px,2vw,18px);font-weight:bold;color:#285339;animation:none}
+#basket{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:70px;filter:drop-shadow(0 6px 3px #2223);width:110px;text-align:center;transition:left .045s linear;z-index:3}
+#feedback{position:absolute;z-index:5;top:42%;left:50%;transform:translate(-50%,-50%);font-size:clamp(22px,4vw,35px);font-weight:900;text-align:center;color:#fff;text-shadow:2px 3px #195438;pointer-events:none}
+.controls{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:10px}
+button{border:0;border-radius:14px;padding:12px 18px;font-weight:bold;font-size:16px;cursor:pointer;color:white;background:#18875d;box-shadow:0 4px 0 #106344;transition:.15s}button:hover{filter:brightness(1.08);transform:translateY(-1px)}button.secondary{background:#3676c5;box-shadow:0 4px 0 #23558c}button.warn{background:#e58c27;box-shadow:0 4px 0 #a75d14}
+#setup{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;padding:10px}input{padding:12px;border:2px solid #8ac9a6;border-radius:12px;font-size:16px}
+#cameraWrap{position:fixed;right:10px;bottom:10px;width:170px;background:#18324b;border:3px solid white;border-radius:14px;overflow:hidden;z-index:10;display:none}#video{width:100%;display:block;transform:scaleX(-1)}#camLabel{color:white;text-align:center;font-size:12px;padding:5px}
+#instructions{text-align:center;color:#315c43;font-size:14px;padding:5px}
+#overlay{position:absolute;inset:0;background:#124e3bdb;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;text-align:center;padding:22px;z-index:8;border-radius:16px}#overlay h2{font-size:32px;margin:8px}#overlay p{max-width:600px;font-size:18px}
+@media(max-width:600px){#arena{min-height:340px}#basket{font-size:60px}#cameraWrap{width:125px}}
+</style>
+</head>
+<body>
+<header><h1>🍎 CATCH THE ANSWER 🧺</h1><p>Tangkap Jawaban! • IPAS Kelas V • Materi Ekosistem</p></header>
+<div class="panel">
+<div id="setup"><input id="student" placeholder="Masukkan nama murid" maxlength="35"><button id="start">🚀 Mulai Bermain</button></div>
+<div id="topbar"><span id="nameLabel">👤 Murid: —</span><span id="levelLabel">🌟 Level: 1/5</span><span id="scoreLabel">🏆 Skor: 0</span><span id="lifeLabel">❤️ Kesempatan: 3</span><span id="timerLabel">⏱️ 90 detik</span></div>
+<div id="question">Masukkan nama, lalu tekan Mulai Bermain!</div>
+<div id="arena"><div id="objects"></div><div id="basket">🧺</div><div id="feedback"></div><div id="overlay"><h2>🌳 Selamat Datang!</h2><p>Gerakkan tangan ke kiri atau kanan untuk mengarahkan keranjang. Tangkap pilihan jawaban yang tepat!</p><p>Mouse: gerakkan pointer di arena • Keyboard: ← → atau A D</p><button id="overlayStart">Mulai!</button></div></div>
+<div class="controls"><button class="secondary" id="camBtn">📷 Aktifkan Kamera</button><button class="warn" id="soundBtn">🔊 Suara: ON</button><button id="leftBtn">⬅️</button><button id="rightBtn">➡️</button></div>
+<div id="instructions">Kamera membutuhkan izin browser. Bila kamera tidak tersedia, gunakan mouse, tombol panah, atau A/D.</div>
+</div>
+<div id="cameraWrap"><video id="video" autoplay playsinline></video><div id="camLabel">Pelacakan tangan</div></div>
+<script>
+const quiz=[
+[
+{q:"Apa yang dimaksud dengan ekosistem?",a:["Hubungan makhluk hidup dan lingkungannya","Kumpulan benda mati saja","Tempat tinggal manusia saja"],c:0,t:"LOTS"},
+{q:"Manakah yang termasuk komponen biotik?",a:["Batu","Rumput","Air"],c:1,t:"LOTS"},
+{q:"Di taman, kupu-kupu mengisap nektar. Hubungan ini membantu...",a:["Mengurangi cahaya","Penyerbukan bunga","Membuat tanah tandus"],c:1,t:"MOTS"}
+],
+[
+{q:"Komponen abiotik dalam ekosistem adalah...",a:["Jamur","Cacing","Cahaya matahari"],c:2,t:"LOTS"},
+{q:"Urutan rantai makanan yang tepat adalah...",a:["Padi → tikus → ular","Ular → padi → tikus","Tikus → ular → padi"],c:0,t:"MOTS"},
+{q:"Jika tumbuhan di suatu habitat berkurang drastis, apa yang mungkin terjadi?",a:["Herbivor selalu bertambah","Herbivor kekurangan makanan","Semua hewan tidak terpengaruh"],c:1,t:"HOTS"}
+],
+[
+{q:"Hewan pemakan tumbuhan disebut...",a:["Karnivor","Herbivor","Omnivor"],c:1,t:"LOTS"},
+{q:"Dalam rantai makanan, elang berperan sebagai...",a:["Produsen","Pengurai","Konsumen tingkat tinggi"],c:2,t:"MOTS"},
+{q:"Mengapa pengurai penting dalam ekosistem?",a:["Mengembalikan unsur hara ke tanah","Menghilangkan semua tumbuhan","Menghentikan aliran energi"],c:0,t:"HOTS"}
+],
+[
+{q:"Contoh hubungan predasi adalah...",a:["Lebah dan bunga","Kucing memangsa tikus","Pohon dan tanah"],c:1,t:"MOTS"},
+{q:"Jaring-jaring makanan tersusun dari...",a:["Banyak rantai makanan yang saling berhubungan","Satu hewan saja","Benda mati saja"],c:0,t:"MOTS"},
+{q:"Apa dampak jika populasi ular menurun, sedangkan tikus meningkat?",a:["Padi berpotensi lebih banyak dimakan tikus","Tikus segera punah","Padi tidak membutuhkan air"],c:0,t:"HOTS"}
+],
+[
+{q:"Organisme yang membuat makanan sendiri disebut...",a:["Konsumen","Produsen","Predator"],c:1,t:"LOTS"},
+{q:"Energi dalam ekosistem umumnya berasal dari...",a:["Matahari","Batu","Tanah liat"],c:0,t:"MOTS"},
+{q:"Di kebun, pestisida berlebihan mengurangi serangga. Bagaimana langkah yang lebih bijak?",a:["Menambah pestisida terus","Membiarkan pencemaran","Menggunakan pengendalian hama ramah lingkungan"],c:2,t:"HOTS"}
+]];
+const emojis=["🍎","🍐","🍊","🍓","🥝","🍇","🌽","🥕","🌻","🍃","🐞","🫐"];
+let name="",score=0,life=3,level=0,qi=0,time=90,active=false,muted=false,handX=.5,camOn=false,raf=null,objects=[],lastSpawn=0,answerCaught=false;
+const arena=document.getElementById("arena"), basket=document.getElementById("basket"), objBox=document.getElementById("objects"), feedback=document.getElementById("feedback"),overlay=document.getElementById("overlay");
+function updateHUD(){document.getElementById("nameLabel").textContent="👤 Murid: "+(name||"—");document.getElementById("levelLabel").textContent="🌟 Level: "+(level+1)+"/5";document.getElementById("scoreLabel").textContent="🏆 Skor: "+score;document.getElementById("lifeLabel").textContent="❤️ Kesempatan: "+life;document.getElementById("timerLabel").textContent="⏱️ "+time+" detik";}
+function sound(freq=650,duration=.12){if(muted)return;try{let c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.frequency.value=freq;o.connect(g);g.connect(c.destination);g.gain.value=.08;o.start();o.stop(c.currentTime+duration)}catch(e){}}
+function setQuestion(){answerCaught=false;objects.forEach(x=>x.el.remove());objects=[];feedback.textContent="";let item=quiz[level][qi];document.getElementById("question").innerHTML=`<small>${item.t} • Level ${level+1} / Soal ${qi+1}</small><br>${item.q}`;lastSpawn=performance.now();spawnChoices();}
+function spawnChoices(){let item=quiz[level][qi], positions=[.18,.5,.82];let shuffled=item.a.map((a,i)=>({a,correct:i===item.c}));shuffled.sort(()=>Math.random()-.5);shuffled.forEach((o,i)=>{let el=document.createElement("div");el.className="fruit";el.innerHTML=emojis[Math.floor(Math.random()*emojis.length)]+"<br>"+o.a;el.style.left=(positions[i]*100)+"%";objBox.appendChild(el);objects.push({el,x:positions[i],y:-75,correct:o.correct,speed:1.3+Math.random()*1.2})});}
+function moveBasket(x){handX=Math.max(.07,Math.min(.93,x));basket.style.left=(handX*100)+"%";}
+arena.addEventListener("mousemove",e=>{let r=arena.getBoundingClientRect();moveBasket((e.clientX-r.left)/r.width)});
+arena.addEventListener("touchmove",e=>{let r=arena.getBoundingClientRect();moveBasket((e.touches[0].clientX-r.left)/r.width);e.preventDefault()},{passive:false});
+document.addEventListener("keydown",e=>{if(e.key==="ArrowLeft"||e.key.toLowerCase()==="a")moveBasket(handX-.06);if(e.key==="ArrowRight"||e.key.toLowerCase()==="d")moveBasket(handX+.06)});
+document.getElementById("leftBtn").onclick=()=>moveBasket(handX-.08);document.getElementById("rightBtn").onclick=()=>moveBasket(handX+.08);
+function begin(){name=document.getElementById("student").value.trim()||"Murid";score=0;life=3;level=0;qi=0;time=90;active=true;updateHUD();overlay.style.display="none";document.getElementById("setup").style.display="none";setQuestion();if(raf)cancelAnimationFrame(raf);loop();timer();}
+document.getElementById("start").onclick=begin;document.getElementById("overlayStart").onclick=()=>{if(!active)begin()};
+function timer(){let tick=()=>{if(!active)return;if(time<=0){finish(false);return}time--;updateHUD();setTimeout(tick,1000)};setTimeout(tick,1000)}
+function loop(){if(!active)return;let now=performance.now(),rect=arena.getBoundingClientRect(),brect=basket.getBoundingClientRect(),basketX=(brect.left+brect.width/2-rect.left),basketY=rect.height-65;
+objects.forEach((o,i)=>{o.y+=o.speed;o.el.style.top=o.y+"px";if(o.y>rect.height-90&&o.y<rect.height-35&&Math.abs(o.x*rect.width-basketX)<65&&!o.hit){o.hit=true;if(o.correct){score+=100;feedback.textContent="✨ BENAR! +100";feedback.style.color="#fff";sound(880);answerCaught=true;setTimeout(nextQ,700)}else{life--;feedback.textContent="Oops! Coba tangkap jawaban lain";feedback.style.color="#ffe2a5";sound(220);updateHUD();if(life<=0)setTimeout(()=>finish(false),600);o.y=rect.height+100}}});
+objects=objects.filter(o=>{if(o.y>rect.height+100){o.el.remove();return false}return true});updateHUD();raf=requestAnimationFrame(loop)}
+function nextQ(){if(!active)return;qi++;if(qi>=3){level++;qi=0;if(level>=5){finish(true);return}feedback.textContent="🌟 Level "+(level+1)+"!";sound(740);setTimeout(setQuestion,800)}else setQuestion()}
+function finish(win){active=false;if(raf)cancelAnimationFrame(raf);objects.forEach(o=>o.el.remove());objects=[];overlay.style.display="flex";overlay.innerHTML=`<h2>${win?"🏆 Luar Biasa!":"🌱 Tetap Semangat!"}</h2><p>${name}, ${win?"kamu telah menyelesaikan 5 level!":"permainan selesai. Ayo belajar lagi dan coba kembali!"}</p><p><strong>Skor akhir: ${score}</strong><br>${win?"Kamu hebat dalam menjelajahi ekosistem!":"Terus berlatih mengenali ekosistem."}</p><button onclick="document.getElementById('setup').style.display='flex';document.getElementById('student').value='"+name.replace(/'/g,"")+"';document.getElementById('overlay').innerHTML='<h2>🌳 Siap Bermain?</h2><p>Gerakkan tangan, mouse, atau tombol panah untuk menangkap jawaban.</p><button id=\\'overlayStart\\'>Mulai!</button>';document.getElementById('overlayStart').onclick=begin">Main Lagi</button>`;document.getElementById("setup").style.display="flex";document.getElementById("question").textContent="Permainan selesai!";sound(win?1000:300,.3)}
+document.getElementById("soundBtn").onclick=()=>{muted=!muted;document.getElementById("soundBtn").textContent=muted?"🔇 Suara: OFF":"🔊 Suara: ON"};
+document.getElementById("camBtn").onclick=async()=>{if(camOn)return;try{const v=document.getElementById("video");let stream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480}});v.srcObject=stream;document.getElementById("cameraWrap").style.display="block";await v.play();await initHands();camOn=true;document.getElementById("camBtn").textContent="📷 Kamera Aktif"}catch(e){alert("Kamera tidak dapat diakses. Izinkan akses kamera atau gunakan mouse dan keyboard.")}};
+async function initHands(){const video=document.getElementById("video");const script=document.createElement("script");script.src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js";script.onload=()=>{const hands=new Hands({locateFile:f=>"https://cdn.jsdelivr.net/npm/@mediapipe/hands/"+f});hands.setOptions({maxNumHands:1,modelComplexity:0,minDetectionConfidence:.55,minTrackingConfidence:.5});hands.onResults(r=>{if(r.multiHandLandmarks&&r.multiHandLandmarks.length){let p=r.multiHandLandmarks[0][9];moveBasket(1-p.x)}});async function frame(){if(video.readyState>=2)await hands.send({image:video});requestAnimationFrame(frame)}frame()};document.head.appendChild(script)}
+</script>
+</body></html>
